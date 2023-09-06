@@ -1,0 +1,22 @@
+cache:
+  key: ${CI_COMMIT_REF_SLUG}
+  paths:
+    - node_modules/
+
+stages:
+  - build
+
+docker_image:
+  stage: build
+  script:
+    - set -eo pipefail
+    - npm --registry=http://mvn.ziroom.com/api/npm/ziroom-npm/ install
+    - npm run build
+    - cp -r build docker/build
+    - cp ./HLUCyo0wsS.txt docker/build/HLUCyo0wsS.txt
+    - cd docker && docker build -t harbor.ziroom.com/${TAG}:$CI_COMMIT_REF_NAME-$CI_PIPELINE_ID .
+    - docker login -u ${DOCKER_USER} -p ${DOCKER_PASS} harbor.ziroom.com
+    - docker push harbor.ziroom.com/${TAG}:$CI_COMMIT_REF_NAME-$CI_PIPELINE_ID
+  only:
+    - api
+    - trigger
